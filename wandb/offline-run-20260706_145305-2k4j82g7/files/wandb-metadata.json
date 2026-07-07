@@ -1,0 +1,21 @@
+{
+    "os": "Linux-6.17.0-29-generic-x86_64-with-debian-trixie-sid",
+    "python": "3.7.13",
+    "heartbeatAt": "2026-07-06T12:53:06.226073",
+    "startedAt": "2026-07-06T12:53:05.542977",
+    "docker": null,
+    "cpu_count": 16,
+    "cuda": null,
+    "args": [],
+    "state": "running",
+    "program": "-m valla.methods.CharNGram",
+    "git": {
+        "remote": "https://github.com/JacobTyo/Valla.git",
+        "commit": "d063365a2adeb1d0f49d73e71fabd43a00bd52e1"
+    },
+    "email": "y.ajjour@ai.uni-hannover.de",
+    "root": "/home/yamen/projects/Valla",
+    "host": "yamen-laptop",
+    "username": "yamen",
+    "executable": "/home/yamen/programs/miniforge3/envs/AuthorID/bin/python3"
+}

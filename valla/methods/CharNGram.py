@@ -10,7 +10,6 @@ import argparse
 import time
 import logging
 import numpy as np
-import wandb
 from sklearn import preprocessing
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.decomposition import TruncatedSVD
@@ -20,7 +19,7 @@ from sklearn.multiclass import OneVsRestClassifier
 from sklearn.linear_model import SGDClassifier, LogisticRegression
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 from valla.dsets import loaders
-from valla.utils import eval_metrics
+from valla.utils import eval_metrics, dataset_utils
 from typing import List, Callable, Tuple
 
 logging.basicConfig(level=logging.DEBUG)
@@ -187,17 +186,10 @@ def ngram(analyzer: str, train_texts: List, train_labels: List, test_texts: List
     predicted_probs = classifier.predict_proba(scaled_test_data)
     logging.debug(f'took {(time.time() - start) / 60} minutes')
 
-    # compute and log char ngram
-    logging.info(f'{analyzer}: logging to wandb')
-    wandb.sklearn.plot_classifier(classifier,
-                                  scaled_train_data, scaled_test_data,
-                                  train_labels, test_labels,
-                                  predictions, predicted_probs,
-                                  [x for x in range(len(set(train_labels)))],
-                                  is_binary=False,
-                                  model_name=analyzer)
+    # compute char ngram metrics
+    logging.info(f'{analyzer}: computing metrics')
     results = eval_metrics.aa_metrics(test_labels, predictions, predicted_probs, prefix=log_prefix, no_auc=True)
-    wandb.log(results)
+    print(results)
 
     # save the model
     clf_name = 'logreg_sgd' if logistic_regression else 'logreg'
@@ -206,10 +198,74 @@ def ngram(analyzer: str, train_texts: List, train_labels: List, test_texts: List
     with open(svm_path, 'wb') as f:
         pickle.dump(classifier, f)
 
-    wandb.save(svm_path)
-
     return predicted_probs
 
+
+def ngram_av(analyzer: str, train_pairs: List, test_pairs: List, gram_range: List,
+             preprocessor: Callable, max_features: int, min_df: float, sublinear_tf: bool, use_lsa: bool,
+             lsa_factors: int, dual: bool, log_prefix: str, save_path: str = None, project: str = '',
+             logistic_regression: bool = False, num_workers: int = 1):
+
+    train_texts1 = [pair[1] for pair in train_pairs]
+    train_texts2 = [pair[2] for pair in train_pairs]
+    train_labels = [pair[0] for pair in train_pairs]
+
+    test_texts1 = [pair[1] for pair in test_pairs]
+    test_texts2 = [pair[2] for pair in test_pairs]
+    test_labels = [pair[0] for pair in test_pairs]
+
+    all_train_texts = train_texts1 + train_texts2
+
+    logging.info(f'{analyzer}: building the tf-idf vectorizer for the {analyzer} n-gram model')
+    count_vectorizer, tfidf_transformer = get_vectorizers(analyzer=analyzer if 'dist' not in analyzer else 'char',
+                                                          gram_range=gram_range,
+                                                          preprocessor=preprocessor,
+                                                          max_features=max_features,
+                                                          min_df=min_df,
+                                                          smooth_idf=True,
+                                                          sublinear_tf=sublinear_tf)
+
+    logging.info(f'{analyzer}: fitting vectorizers on all training texts')
+    start = time.time()
+    train_term_matrix = count_vectorizer.fit_transform(all_train_texts)
+    tfidf_transformer.fit(train_term_matrix)
+    logging.debug(f'took {(time.time() - start) / 60} minutes to fit vectorizers')
+
+    def get_pair_features(texts1, texts2):
+        vecs1 = tfidf_transformer.transform(count_vectorizer.transform(texts1))
+        vecs2 = tfidf_transformer.transform(count_vectorizer.transform(texts2))
+        return np.abs(vecs1 - vecs2)
+
+    logging.info(f'{analyzer}: vectorizing train and test pairs')
+    X_train = get_pair_features(train_texts1, train_texts2)
+    X_test = get_pair_features(test_texts1, test_texts2)
+
+    logging.info(f'{analyzer}: scaling the vectorized data')
+    max_abs_scaler = preprocessing.MaxAbsScaler()
+    scaled_train_data = max_abs_scaler.fit_transform(X_train)
+    scaled_test_data = max_abs_scaler.transform(X_test)
+
+    logging.info(f'{analyzer}: fitting the classifier')
+    start = time.time()
+    if logistic_regression:
+        classifier = SGDClassifier(loss='log', n_jobs=num_workers, early_stopping=False, verbose=1)
+    else:
+        classifier = LogisticRegression(dual=dual) # AV is binary, no need for multinomial
+
+    classifier.fit(scaled_train_data, train_labels)
+    logging.debug(f'took {(time.time() - start) / 60} minutes')
+
+    logging.info(f'{analyzer}: inference on the test set')
+    start = time.time()
+    predictions = classifier.predict(scaled_test_data)
+    predicted_probs = classifier.predict_proba(scaled_test_data)
+    logging.debug(f'took {(time.time() - start) / 60} minutes')
+
+    logging.info(f'{analyzer}: computing metrics')
+    results = eval_metrics.av_metrics(test_labels, predictions, predicted_probs[:, 1], prefix=log_prefix)
+    print(results)
+
+    return predicted_probs
 
 def run_ngram(config={}, ngram_type: str = 'char', train_pth: str = None, val_pth: str = None, test_pth: str = None,
               project='', num_workers=10):
@@ -221,71 +277,103 @@ def run_ngram(config={}, ngram_type: str = 'char', train_pth: str = None, val_pt
     sweep = True if project != '' else False
     project = project if project != '' else config.project
 
-    tmp = vars(config)
-    tmp['model'] = ngram_type
+    # add the run name to make sure we don't overwrite other models
+    # if config.save_path is not None:
+    save_path = os.path.join('ngram', project, 'char_ngram_run')
 
-    with wandb.init(project=project, config=tmp, reinit=True):
-        if sweep:
-            config = wandb.config
-            config.project = project
-            config.num_workers = num_workers
+    logging.info('starting')
 
-        # config.project = project
-        # config.save_path = os.path.join('ngram', project, wandb.run.name)
+    # get the training and testing dataset as List[List[Union[int, str]]]
+    logging.info('loading the datasets')
+    train_dset = loaders.get_aa_dataset(train_pth)
+    test_dset = loaders.get_aa_dataset(test_pth)
 
-        # config.model = ngram_type
-        # wandb.config.update(config)
+    if val_pth is not None and val_pth != '':
+        log_prefix = 'test/'
+        train_dset.extend(loaders.get_aa_dataset(val_pth))
+    else:
+        log_prefix = 'val/'
 
-        # add the run name to make sure we don't overwrite other models
-        # if config.save_path is not None:
-        save_path = os.path.join('ngram', project, wandb.run.name)
+    train_texts = [text for _, text in train_dset]
+    train_labels = [label for label, _ in train_dset]
+    test_texts = [text for _, text in test_dset]
+    test_labels = [label for label, _ in test_dset]
 
-        logging.info('starting')
+    # get the proper preprocessor and make sure ngram_type is set for the vectorizer
+    if sweep:
+        gram_range = config.gram_range
+    if ngram_type == 'char':
+        preprocessor = base_preprocessor
+        if not sweep:
+            gram_range = config.char_range
+    elif ngram_type == 'dist_char':
+        preprocessor = char_diff_preprocessor
+        if not sweep:
+            gram_range = config.dist_range
+    elif ngram_type == 'word':
+        preprocessor = word_preprocessor
+        if not sweep:
+            gram_range = config.word_range
+    else:
+        raise ValueError(f'ngram_type was not set properly, should be in [char, dist_char, word], got {ngram_type}')
 
-        # get the training and testing dataset as List[List[Union[int, str]]]
-        logging.info('loading the datasets')
-        train_dset = loaders.get_aa_dataset(train_pth)
-        test_dset = loaders.get_aa_dataset(test_pth)
-
-        if val_pth is not None and val_pth != '':
-            log_prefix = 'test/'
-            train_dset.extend(loaders.get_aa_dataset(val_pth))
-        else:
-            log_prefix = 'val/'
-
-        train_texts = [text for _, text in train_dset]
-        train_labels = [label for label, _ in train_dset]
-        test_texts = [text for _, text in test_dset]
-        test_labels = [label for label, _ in test_dset]
-
-        # get the proper preprocessor and make sure ngram_type is set for the vectorizer
-        if sweep:
-            gram_range = config.gram_range
-        if ngram_type == 'char':
-            preprocessor = base_preprocessor
-            if not sweep:
-                gram_range = config.char_range
-        elif ngram_type == 'dist_char':
-            preprocessor = char_diff_preprocessor
-            if not sweep:
-                gram_range = config.dist_range
-        elif ngram_type == 'word':
-            preprocessor = word_preprocessor
-            if not sweep:
-                gram_range = config.word_range
-        else:
-            raise ValueError(f'ngram_type was not set properly, should be in [char, dist_char, word], got {ngram_type}')
-
-        probas = ngram(analyzer=ngram_type, train_texts=train_texts, train_labels=train_labels, test_texts=test_texts,
-                       test_labels=test_labels, gram_range=gram_range, preprocessor=preprocessor,
-                       max_features=config.max_features,
-                       min_df=config.min_df, sublinear_tf=config.sublinear_tf, use_lsa=config.use_lsa,
-                       lsa_factors=config.lsa_factors, dual=not config.primal, log_prefix=log_prefix,
-                       save_path=save_path, project=config.project, logistic_regression=config.logistic_regression,
-                       num_workers=config.num_workers)
+    probas = ngram(analyzer=ngram_type, train_texts=train_texts, train_labels=train_labels, test_texts=test_texts,
+                   test_labels=test_labels, gram_range=gram_range, preprocessor=preprocessor,
+                   max_features=config.max_features,
+                   min_df=config.min_df, sublinear_tf=config.sublinear_tf, use_lsa=config.use_lsa,
+                   lsa_factors=config.lsa_factors, dual=not config.primal, log_prefix=log_prefix,
+                   save_path=save_path, project=config.project, logistic_regression=config.logistic_regression,
+                   num_workers=config.num_workers)
 
     return probas
 
+
+def run_ngram_av(config={}, ngram_type: str = 'char', train_pth: str = None, test_pth: str = None,
+                 project='', num_workers=10):
+
+    if isinstance(config, dict):
+        config = argparse.Namespace(**config)
+
+    sweep = True if project != '' else False
+    project = project if project != '' else config.project
+
+    save_path = os.path.join('ngram_av', project, 'char_ngram_run')
+
+    logging.info('starting AV run')
+
+    logging.info('loading the datasets')
+    train_dset = loaders.get_av_dataset(train_pth)
+    test_dset = loaders.get_av_dataset(test_pth)
+
+    log_prefix = 'val/'
+
+    # get the proper preprocessor and make sure ngram_type is set for the vectorizer
+    if sweep:
+        gram_range = config.gram_range
+    if ngram_type == 'char':
+        preprocessor = base_preprocessor
+        if not sweep:
+            gram_range = config.char_range
+    elif ngram_type == 'dist_char':
+        preprocessor = char_diff_preprocessor
+        if not sweep:
+            gram_range = config.dist_range
+    elif ngram_type == 'word':
+        preprocessor = word_preprocessor
+        if not sweep:
+            gram_range = config.word_range
+    else:
+        raise ValueError(f'ngram_type was not set properly, should be in [char, dist_char, word], got {ngram_type}')
+
+    probas = ngram_av(analyzer=ngram_type, train_pairs=train_dset, test_pairs=test_dset,
+                      gram_range=gram_range, preprocessor=preprocessor,
+                      max_features=config.max_features,
+                      min_df=config.min_df, sublinear_tf=config.sublinear_tf, use_lsa=config.use_lsa,
+                      lsa_factors=config.lsa_factors, dual=not config.primal, log_prefix=log_prefix,
+                      save_path=save_path, project=config.project, logistic_regression=config.logistic_regression,
+                      num_workers=config.num_workers)
+
+    return probas
 
 def ensemble(config, test_labels, probas_word, probas_char, probas_dist, prefix=''):
     # need to make sure config is a namespace
@@ -294,21 +382,18 @@ def ensemble(config, test_labels, probas_word, probas_char, probas_dist, prefix=
 
     config.model = 'ensemble'
 
-    # compute and long ensemble
-    with wandb.init(project=args.project, config=vars(config), reinit=True):
+    # compute and log ensemble
+    logging.info('ensembling the models')
+    # Soft Voting procedure (combines the votes of the three individual classifier)
+    avg_probas = np.average([probas_word, probas_dist, probas_char], axis=0)
+    avg_predictions = []
+    for text_probs in avg_probas:
+        ind_best = np.argmax(text_probs)
+        avg_predictions.append(ind_best)
 
-        logging.info('ensembling the models')
-        # Soft Voting procedure (combines the votes of the three individual classifier)
-        avg_probas = np.average([probas_word, probas_dist, probas_char], axis=0)
-        avg_predictions = []
-        for text_probs in avg_probas:
-            ind_best = np.argmax(text_probs)
-            avg_predictions.append(ind_best)
-
-        ensemble_results = eval_metrics.aa_metrics(test_labels, avg_predictions, avg_probas, prefix=prefix, no_auc=True)
-        wandb.log(ensemble_results)
-        wandb.finish()
-        logging.info('done')
+    ensemble_results = eval_metrics.aa_metrics(test_labels, avg_predictions, avg_probas, prefix=prefix, no_auc=True)
+    print(ensemble_results)
+    logging.info('done')
 
 
 if __name__ == '__main__':
@@ -341,6 +426,7 @@ if __name__ == '__main__':
     parser.add_argument('--type', type=str, default='')
     parser.add_argument('--logistic_regression', action='store_true')
     parser.add_argument('--num_workers', type=int, default=10)
+    parser.add_argument('--av', action='store_true', help="Run in Authorship Verification mode.")
 
     args = parser.parse_args()
 
@@ -350,13 +436,14 @@ if __name__ == '__main__':
 
     np.random.seed(args.seed)
 
-    wandb.login()
-
     log_prf = 'test' if 'test' in args.test_dataset else 'val'
 
     total_time_start = time.time()
 
-    if args.type == '':
+    if args.av:
+        logging.info("Running in Authorship Verification mode.")
+        run_ngram_av(args, args.type if args.type != '' else 'char', train_pth=args.train_dataset, test_pth=args.test_dataset)
+    elif args.type == '':
         char_probas = run_ngram(args, 'char', train_pth=args.train_dataset, val_pth=args.val_dataset,
                                 test_pth=args.test_dataset)
         dist_probas = run_ngram(args, 'dist_char', train_pth=args.train_dataset, val_pth=args.val_dataset,
