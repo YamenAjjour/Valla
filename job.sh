@@ -5,7 +5,7 @@
 #SBATCH --error=char-ngram_%j.err     # File to capture standard error
 #SBATCH --nodes=1                     # Request a single node
 #SBATCH --ntasks-per-node=1             # Run one task on the node
-#SBATCH --cpus-per-task=10              # Number of CPUs per task (should match --num_workers)
+#SBATCH --cpus-per-task=48              # Number of CPUs per task (should match --num_workers)
 #SBATCH --mem=64G                       # Memory per node
 #SBATCH --time=04:00:00                 # Maximum wall-clock time (hh:mm:ss)
 #SBATCH --partition=cpu                # <--- CHANGE THIS to your cluster's partition name
@@ -41,7 +41,7 @@ python3 -m valla.methods.CharNGram \
 #     --max_features 100000 \
 #     --min_df 0.01 \
 #     --sublinear_tf \
-#     --num_workers 10 \
+#     --num_workers 48 \
 #     --av \
 #     --type "char"
 
