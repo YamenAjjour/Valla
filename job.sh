@@ -26,13 +26,13 @@ echo "Starting the Python script..."
 # Add or remove flags as needed for your specific experiment.
 python3 -m valla.methods.CharNGram \
     --project "pan20-charngram-aa" \
-    --train_dataset "/path/to/your/pan20-authorship-verification-training-small.jsonl" \
-    --test_dataset "/path/to/your/pan20-authorship-verification-test.jsonl" \
-    --max_features 100000 \
+    --train_dataset "gerav_AV_train.csv" \
+    --test_dataset "gerav_AV_test.csv" \
+    --max_features 1000 \
     --min_df 0.01 \
     --sublinear_tf \
     --num_workers 10
-
+    --av
 # To run in Authorship Verification (AV) mode on a specific n-gram type, you could use:
 # python3 -m valla.methods.CharNGram \
 #     --project "pan20-charngram-av" \
