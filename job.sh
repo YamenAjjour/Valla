@@ -8,7 +8,7 @@
 #SBATCH --cpus-per-task=10              # Number of CPUs per task (should match --num_workers)
 #SBATCH --mem=64G                       # Memory per node
 #SBATCH --time=04:00:00                 # Maximum wall-clock time (hh:mm:ss)
-#SBATCH --partition=h100                # <--- CHANGE THIS to your cluster's partition name
+#SBATCH --partition=cpu                # <--- CHANGE THIS to your cluster's partition name
 
 # --- Environment Setup ---
 echo "Setting up the environment..."
