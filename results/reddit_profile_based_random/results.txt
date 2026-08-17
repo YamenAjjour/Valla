@@ -1,0 +1,17 @@
+===AV results===
+accuracy: 0.4971
+macro_accuracy: 0.4971
+micro_recall: 0.4971
+macro_recall: 0.4971
+micro_precision: 0.4971
+macro_precision: 0.4971
+threshold: 0.5000
+auc: 0.4971
+f1: 0.4994
+
+===Efficiency===
+avg_prediction_time_sec: 1.23391e-07
+avg_cpu_memory_gb: 0.5328
+max_cpu_memory_gb: 0.5334
+avg_gpu_memory_gb: 0.0000
+max_gpu_memory_gb: 0.0000

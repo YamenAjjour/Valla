@@ -1,0 +1,6 @@
+method,pan2020_auc,pan2020_f1,gerav_f1-score,crossnews_accuracy,crossnews_f1-score
+adhominem,0.9693,,0.71,,
+charngram,0.9719,0.767,0.65,69.5,73.1
+ppm,0.7917,0.77,0.6,67.5,62.8
+siamesebert,0.9709,,0.78,,
+random,,,,50.0,50.0

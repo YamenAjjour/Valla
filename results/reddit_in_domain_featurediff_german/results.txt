@@ -1,0 +1,31 @@
+===AV results===
+accuracy: 0.6135
+macro_accuracy: 0.6135
+micro_recall: 0.6135
+macro_recall: 0.6135
+micro_precision: 0.6135
+macro_precision: 0.6140
+threshold: 0.5000
+auc: 0.6576
+f1: 0.6005
+
+===PAN results===
+auc: 0.6580
+c@1: 0.6140
+f_05_u: 0.6130
+F1: 0.6010
+brier: 0.7680
+overall: 0.6510
+
+===Best Threshold===
+accuracy: 0.6151
+auc: 0.6576
+ca1: 0.6135
+f_05_u: 0.6129
+F1: 0.5739
+overall: 0.6146
+threshold: 0.5159
+
+===Efficiency===
+avg_prediction_time_sec: 4.19194e-07
+avg_prediction_memory_gb: 2.2726

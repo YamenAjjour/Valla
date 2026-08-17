@@ -1,0 +1,34 @@
+===AV results===
+accuracy: 0.7169
+macro_accuracy: 0.7169
+micro_recall: 0.7169
+macro_recall: 0.7169
+micro_precision: 0.7169
+macro_precision: 0.7169
+threshold: 0.5000
+auc: 0.7806
+f1: 0.7159
+
+===PAN results===
+auc: 0.7810
+c@1: 0.7170
+f_05_u: 0.7170
+F1: 0.7160
+brier: 0.8080
+overall: 0.7480
+
+===Best Threshold===
+accuracy: 0.7176
+auc: 0.7806
+ca1: 0.7169
+f_05_u: 0.7174
+F1: 0.7274
+overall: 0.7320
+threshold: 0.4541
+
+===Efficiency===
+avg_prediction_time_sec: 8.75585e-07
+avg_cpu_memory_gb: 1.7773
+max_cpu_memory_gb: 1.9202
+avg_gpu_memory_gb: 0.0000
+max_gpu_memory_gb: 0.0000
