@@ -59,6 +59,21 @@ See each file in `valla/methods` for more information on the available methods.
 
 This project uses [Weights & Biases](https://docs.wandb.ai/) both for logging and hyperparameter sweeps.
 
+## Results
+
+The `results/` directory holds experiment output:
+
+- `results.txt` per experiment (one per dataset/method combination), with accuracy and recall metrics.
+- `central_results.csv`, `central_results_1920.csv`, `central_results_litreature.csv`: tables aggregating
+  F1-score, average run time, and average memory usage across methods and datasets.
+
+Trained model weights and vectorized feature arrays are not tracked in this repository (too large for git);
+only the metrics/reports are included.
+
+`gerav_methods/` holds the scripts used to train and evaluate the `valla` methods (AdHominem, SiameseBert,
+PPM, FeatureDifference, RandomBaseline) on GerAV, the German authorship verification dataset, plus
+`run_valla_methods.py`, which drives training across all of them.
+
 ## Cite
 
 If you use this software, place cite our paper: [On the State of the Art in Authorship Attribution and Authorship Verification](https://arxiv.org/abs/2209.06869)
