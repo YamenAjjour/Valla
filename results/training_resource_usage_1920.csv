@@ -1,17 +1,17 @@
-baseline,dataset,max_tokens,entry_point,throughput_samples_per_sec,avg_cpu_memory_gb,peak_cpu_memory_gb,avg_gpu_memory_gb,peak_gpu_memory_gb,num_training_samples,elapsed_sec,status,source_log
-adhominem,gerav,1920,gerav_methods.torched_AdHominem,23.2485,1.9681,2.3412,0.0000,0.0000,27694,1191.2,OK,resbench1920-adhominem-gerav_751501.out
-adhominem,avshift,1920,gerav_methods.torched_AdHominem,16.7804,2.3940,2.5477,0.0000,0.0000,32380,1929.6,OK,resbench1920-adhominem-avshift_751502.out
-adhominem,pan2020,1920,gerav_methods.torched_AdHominem,175.7883,6.8802,6.9008,0.2317,0.2317,275565,1567.6,OK,resbench1920-adhominem-pan2020_751503.out
-adhominem,crossnews,1920,gerav_methods.torched_AdHominem,190.7760,3.2046,3.2170,0.2320,0.2324,97046,508.7,OK,resbench1920-adhominem-crossnews_751504.out
-ppm,gerav,1920,gerav_methods.PPM_AV,908.0698,0.5468,0.5509,0.0000,0.0000,27694,30.5,OK,resbench1920-ppm-gerav_751505.out
-ppm,avshift,1920,gerav_methods.PPM_AV,380.8830,0.9298,0.9335,0.0000,0.0000,32380,85.0,OK,resbench1920-ppm-avshift_751506.out
-ppm,pan2020,1920,gerav_methods.PPM_AV,273.0879,4.8486,4.8515,0.0000,0.0000,275565,1009.1,OK,resbench1920-ppm-pan2020_751507.out
-ppm,crossnews,1920,gerav_methods.PPM_AV,631.0848,1.3622,1.3645,0.0000,0.0000,97046,153.8,OK,resbench1920-ppm-crossnews_751508.out
-charngram_featurediff,gerav,1920,gerav_methods.FeatureDifferenceGerman,9102.9068,1.7729,1.8927,0.0000,0.0000,5538800,608.5,OK,resbench1920-charngram-gerav_751509.out
-charngram_featurediff,avshift,1920,gerav_methods.FeatureDifferenceGerman,19579.9681,2.0467,2.4388,0.0000,0.0000,6476000,330.7,OK,resbench1920-charngram-avshift_751510.out
-charngram_featurediff,pan2020,1920,methods.CharNGram (--av),319.7351,231.6448,231.6458,0.0000,0.0000,275565,861.9,OK,resbench1920-charngram-pan2020_751709.out
-charngram_featurediff,crossnews,1920,methods.CharNGram (--av),713.6134,40.8347,41.2407,0.0000,0.0000,97046,136.0,OK,resbench1920-charngram-crossnews_751512.out
-siamesebert,gerav,1920,gerav_methods.SiameseBert,43.8710,1.9251,1.9459,2.8433,9.9285,27694,631.3,OK,resbench1920-siamesebert-gerav_751513.out
-siamesebert,avshift,1920,gerav_methods.SiameseBert,41.6969,2.9274,2.9930,2.6182,9.3572,32380,776.6,OK,resbench1920-siamesebert-avshift_751514.out
-siamesebert,pan2020,1920,gerav_methods.SiameseBert,36.9039,5.7426,7.5704,2.5256,10.6765,100000,2709.7,OK,resbench1920-siamesebert-pan2020_751515.out
-siamesebert,crossnews,1920,gerav_methods.SiameseBert,51.6824,3.6102,3.6773,3.1497,10.7658,97046,1877.7,OK,resbench1920-siamesebert-crossnews_751516.out
+baseline,dataset,max_tokens,entry_point,throughput_samples_per_sec,avg_cpu_memory_gb,peak_cpu_memory_gb,avg_gpu_memory_gb,peak_gpu_memory_gb,avg_total_memory_gb,peak_total_memory_gb,num_training_samples,elapsed_sec,status,source_log
+adhominem,gerav,1920,gerav_methods.torched_AdHominem,23.2485,1.9681,2.3412,0.0000,0.0000,1.9681,2.3412,27694,1191.2,OK,resbench1920-adhominem-gerav_751501.out
+adhominem,avshift,1920,gerav_methods.torched_AdHominem,16.7804,2.3940,2.5477,0.0000,0.0000,2.3940,2.5477,32380,1929.6,OK,resbench1920-adhominem-avshift_751502.out
+adhominem,pan2020,1920,gerav_methods.torched_AdHominem,175.7883,6.8802,6.9008,0.2317,0.2317,7.1119,7.1325,275565,1567.6,OK,resbench1920-adhominem-pan2020_751503.out
+adhominem,crossnews,1920,gerav_methods.torched_AdHominem,190.7760,3.2046,3.2170,0.2320,0.2324,3.4366,3.4494,97046,508.7,OK,resbench1920-adhominem-crossnews_751504.out
+ppm,gerav,1920,gerav_methods.PPM_AV,908.0698,0.5468,0.5509,0.0000,0.0000,0.5468,0.5509,27694,30.5,OK,resbench1920-ppm-gerav_751505.out
+ppm,avshift,1920,gerav_methods.PPM_AV,380.8830,0.9298,0.9335,0.0000,0.0000,0.9298,0.9335,32380,85.0,OK,resbench1920-ppm-avshift_751506.out
+ppm,pan2020,1920,gerav_methods.PPM_AV,273.0879,4.8486,4.8515,0.0000,0.0000,4.8486,4.8515,275565,1009.1,OK,resbench1920-ppm-pan2020_751507.out
+ppm,crossnews,1920,gerav_methods.PPM_AV,631.0848,1.3622,1.3645,0.0000,0.0000,1.3622,1.3645,97046,153.8,OK,resbench1920-ppm-crossnews_751508.out
+charngram_featurediff,gerav,1920,gerav_methods.FeatureDifferenceGerman,9102.9068,1.7729,1.8927,0.0000,0.0000,1.7729,1.8927,5538800,608.5,OK,resbench1920-charngram-gerav_751509.out
+charngram_featurediff,avshift,1920,gerav_methods.FeatureDifferenceGerman,19579.9681,2.0467,2.4388,0.0000,0.0000,2.0467,2.4388,6476000,330.7,OK,resbench1920-charngram-avshift_751510.out
+charngram_featurediff,pan2020,1920,methods.CharNGram (--av),319.7351,231.6448,231.6458,0.0000,0.0000,231.6448,231.6458,275565,861.9,OK,resbench1920-charngram-pan2020_751709.out
+charngram_featurediff,crossnews,1920,methods.CharNGram (--av),713.6134,40.8347,41.2407,0.0000,0.0000,40.8347,41.2407,97046,136.0,OK,resbench1920-charngram-crossnews_751512.out
+siamesebert,gerav,1920,gerav_methods.SiameseBert,43.8710,1.9251,1.9459,2.8433,9.9285,4.7684,11.8744,27694,631.3,OK,resbench1920-siamesebert-gerav_751513.out
+siamesebert,avshift,1920,gerav_methods.SiameseBert,41.6969,2.9274,2.9930,2.6182,9.3572,5.5456,12.3502,32380,776.6,OK,resbench1920-siamesebert-avshift_751514.out
+siamesebert,pan2020,1920,gerav_methods.SiameseBert,36.9039,5.7426,7.5704,2.5256,10.6765,8.2682,18.2469,100000,2709.7,OK,resbench1920-siamesebert-pan2020_751515.out
+siamesebert,crossnews,1920,gerav_methods.SiameseBert,51.6824,3.6102,3.6773,3.1497,10.7658,6.7599,14.4431,97046,1877.7,OK,resbench1920-siamesebert-crossnews_751516.out
